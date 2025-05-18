@@ -7,7 +7,6 @@ import { getFaviconUrl } from "../utils/favicon";
 
 interface ProjectViewProps {
   project: Project;
-  onProjectUpdate?: () => void;
 }
 
 export function ProjectView({ project }: ProjectViewProps) {

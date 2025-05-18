@@ -1,6 +1,7 @@
 import { Form, ActionPanel, Action, useNavigation } from "@raycast/api";
 import { ProjectLink } from "../types";
 import { addLink, updateLink } from "../utils/storage";
+import { showFailureToast } from "@raycast/utils";
 
 interface LinkFormProps {
   projectId: string;
@@ -12,21 +13,25 @@ export function LinkForm({ projectId, link, onSave }: LinkFormProps) {
   const { pop } = useNavigation();
 
   async function handleSubmit(values: Record<string, string>) {
-    if (link) {
-      await updateLink({
-        ...link,
-        title: values.title,
-        url: values.url,
-      });
-    } else {
-      await addLink({
-        projectId,
-        title: values.title,
-        url: values.url,
-      });
+    try {
+      if (link) {
+        await updateLink({
+          ...link,
+          title: values.title,
+          url: values.url,
+        });
+      } else {
+        await addLink({
+          projectId,
+          title: values.title,
+          url: values.url,
+        });
+      }
+      onSave?.();
+      pop();
+    } catch (error) {
+      showFailureToast(error, { title: "Could not save link" });
     }
-    onSave?.();
-    pop();
   }
 
   return (

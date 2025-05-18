@@ -4,6 +4,7 @@ import { Project } from "./types";
 import { getProjects, deleteProject } from "./utils/storage";
 import { ProjectForm } from "./components/ProjectForm";
 import { ProjectView } from "./components/ProjectView";
+import { showFailureToast } from "@raycast/utils";
 
 export default function Command() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -14,11 +15,7 @@ export default function Command() {
       const loadedProjects = await getProjects();
       setProjects(loadedProjects);
     } catch (error) {
-      await showToast({
-        style: Toast.Style.Failure,
-        title: "Failed to load projects",
-        message: String(error),
-      });
+      await showFailureToast(error, { title: "Failed to load projects" });
     } finally {
       setIsLoading(false);
     }
@@ -33,11 +30,7 @@ export default function Command() {
       });
       await loadProjects();
     } catch (error) {
-      await showToast({
-        style: Toast.Style.Failure,
-        title: "Failed to delete project",
-        message: String(error),
-      });
+      await showFailureToast(error, { title: "Failed to delete project" });
     }
   }
 
@@ -79,11 +72,7 @@ export default function Command() {
           actions={
             <ActionPanel>
               <ActionPanel.Section>
-                <Action.Push
-                  title="Open Project"
-                  icon={Icon.ArrowRight}
-                  target={<ProjectView project={project} onProjectUpdate={loadProjects} />}
-                />
+                <Action.Push title="Open Project" icon={Icon.ArrowRight} target={<ProjectView project={project} />} />
                 <Action.Push
                   title="Edit Project"
                   icon={Icon.Pencil}
