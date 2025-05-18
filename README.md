@@ -7,6 +7,7 @@ Organize and manage your project-related links in one place.
 - Create and manage projects with customizable colors
 - Organize links within projects with automatic favicons
 - Quick search through projects and links
+- Open all project links with a single command
 - Keyboard shortcuts for efficient navigation
 
 ## Usage
@@ -18,6 +19,7 @@ Organize and manage your project-related links in one place.
    - `Cmd` + `N`: Create new project/link
    - `Cmd` + `E`: Edit project/link
    - `Cmd` + `C`: Copy link URL
+   - `Cmd` + `Shift` + `O`: Open all links
    - `Cmd` + `Shift` + `Backspace`: Delete item
 
 ## Support

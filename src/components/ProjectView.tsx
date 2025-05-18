@@ -1,4 +1,4 @@
-import { ActionPanel, Action, Icon, List, showToast, Toast } from "@raycast/api";
+import { ActionPanel, Action, Icon, List, showToast, Toast, open } from "@raycast/api";
 import { useEffect, useState } from "react";
 import { Project, ProjectLink } from "../types";
 import { getLinks, deleteLink } from "../utils/storage";
@@ -46,6 +46,28 @@ export function ProjectView({ project }: ProjectViewProps) {
     }
   }
 
+  async function openAllLinks() {
+    try {
+      for (const link of links) {
+        await showToast({
+          style: Toast.Style.Animated,
+          title: `Opening ${link.title}...`,
+        });
+        await open(link.url);
+      }
+      await showToast({
+        style: Toast.Style.Success,
+        title: "Opened all links",
+      });
+    } catch (error) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Failed to open links",
+        message: String(error),
+      });
+    }
+  }
+
   useEffect(() => {
     loadLinks();
   }, [project.id]);
@@ -63,6 +85,14 @@ export function ProjectView({ project }: ProjectViewProps) {
             target={<LinkForm projectId={project.id} onSave={loadLinks} />}
             shortcut={{ modifiers: ["cmd"], key: "n" }}
           />
+          {links.length > 0 && (
+            <Action
+              title="Open All Links"
+              icon={Icon.Globe}
+              onAction={openAllLinks}
+              shortcut={{ modifiers: ["cmd", "shift"], key: "o" }}
+            />
+          )}
         </ActionPanel>
       }
     >
@@ -102,6 +132,14 @@ export function ProjectView({ project }: ProjectViewProps) {
                   target={<LinkForm projectId={project.id} onSave={loadLinks} />}
                   shortcut={{ modifiers: ["cmd"], key: "n" }}
                 />
+                {links.length > 1 && (
+                  <Action
+                    title="Open All Links"
+                    icon={Icon.Globe}
+                    onAction={openAllLinks}
+                    shortcut={{ modifiers: ["cmd", "shift"], key: "o" }}
+                  />
+                )}
               </ActionPanel.Section>
               <ActionPanel.Section>
                 <Action.CopyToClipboard
