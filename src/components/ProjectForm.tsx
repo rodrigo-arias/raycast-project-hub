@@ -1,7 +1,7 @@
 import { Form, ActionPanel, Action, useNavigation, Icon } from "@raycast/api";
 import { Project } from "../types";
 import { addProject, updateProject } from "../utils/storage";
-import { showFailureToast } from "@raycast/utils";
+import { FormValidation, showFailureToast, useForm } from "@raycast/utils";
 
 interface ProjectFormProps {
   project?: Project;
@@ -20,35 +20,47 @@ const COLORS = [
   { value: "#FF9F1C", label: "Orange" },
 ] as const;
 
+interface FormValues {
+  title: string;
+  subtitle?: string;
+  color?: string;
+}
+
 export function ProjectForm({ project, onSave }: ProjectFormProps) {
   const { pop } = useNavigation();
 
-  async function handleSubmit(values: { title: string; subtitle?: string; color?: string }) {
-    try {
-      if (!values.title.trim()) {
-        throw new Error("Title is required");
+  const { handleSubmit, itemProps } = useForm<FormValues>({
+    onSubmit: async (values) => {
+      try {
+        if (project) {
+          await updateProject({
+            ...project,
+            title: values.title,
+            subtitle: values.subtitle,
+            color: values.color,
+          });
+        } else {
+          await addProject({
+            title: values.title,
+            subtitle: values.subtitle,
+            color: values.color,
+          });
+        }
+        onSave?.();
+        pop();
+      } catch (error) {
+        showFailureToast(error, { title: "Failed to save project" });
       }
-
-      if (project) {
-        await updateProject({
-          ...project,
-          title: values.title,
-          subtitle: values.subtitle,
-          color: values.color,
-        });
-      } else {
-        await addProject({
-          title: values.title,
-          subtitle: values.subtitle,
-          color: values.color,
-        });
-      }
-      onSave?.();
-      pop();
-    } catch (error) {
-      showFailureToast(error, { title: "Failed to save project" });
-    }
-  }
+    },
+    validation: {
+      title: FormValidation.Required,
+    },
+    initialValues: {
+      title: project?.title ?? "",
+      subtitle: project?.subtitle ?? "",
+      color: project?.color ?? "",
+    },
+  });
 
   return (
     <Form
@@ -58,21 +70,14 @@ export function ProjectForm({ project, onSave }: ProjectFormProps) {
         </ActionPanel>
       }
     >
+      <Form.TextField {...itemProps.title} title="Title" placeholder="Enter project title" autoFocus />
       <Form.TextField
-        id="title"
-        title="Title"
-        placeholder="Enter project title"
-        defaultValue={project?.title}
-        autoFocus
-      />
-      <Form.TextField
-        id="subtitle"
+        {...itemProps.subtitle}
         title="Subtitle"
         placeholder="Enter project subtitle (optional)"
-        defaultValue={project?.subtitle}
         info="A brief description or category for your project"
       />
-      <Form.Dropdown id="color" title="Color" defaultValue={project?.color}>
+      <Form.Dropdown {...itemProps.color} title="Color">
         <Form.Dropdown.Item value="" title="Default Color" />
         {COLORS.map((color) => (
           <Form.Dropdown.Item

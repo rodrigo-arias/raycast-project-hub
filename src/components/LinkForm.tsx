@@ -1,7 +1,7 @@
 import { Form, ActionPanel, Action, useNavigation } from "@raycast/api";
 import { ProjectLink } from "../types";
 import { addLink, updateLink } from "../utils/storage";
-import { showFailureToast } from "@raycast/utils";
+import { showFailureToast, useForm, FormValidation } from "@raycast/utils";
 
 interface LinkFormProps {
   projectId: string;
@@ -17,34 +17,53 @@ interface FormValues {
 export function LinkForm({ projectId, link, onSave }: LinkFormProps) {
   const { pop } = useNavigation();
 
-  async function handleSubmit(values: FormValues) {
-    try {
-      const trimmedUrl = values.url.trim();
+  const { handleSubmit, itemProps } = useForm<FormValues>({
+    onSubmit: async (values) => {
       try {
-        new URL(trimmedUrl);
-      } catch {
-        throw new Error("Please enter a valid URL");
-      }
+        const trimmedUrl = values.url.trim();
+        try {
+          new URL(trimmedUrl);
+        } catch {
+          throw new Error("Please enter a valid URL");
+        }
 
-      if (link) {
-        await updateLink({
-          ...link,
-          title: values.title.trim(),
-          url: trimmedUrl,
-        });
-      } else {
-        await addLink({
-          projectId,
-          title: values.title.trim(),
-          url: trimmedUrl,
-        });
+        if (link) {
+          await updateLink({
+            ...link,
+            title: values.title.trim(),
+            url: trimmedUrl,
+          });
+        } else {
+          await addLink({
+            projectId,
+            title: values.title.trim(),
+            url: trimmedUrl,
+          });
+        }
+        onSave?.();
+        pop();
+      } catch (error) {
+        showFailureToast(error, { title: "Could not save link" });
       }
-      onSave?.();
-      pop();
-    } catch (error) {
-      showFailureToast(error, { title: "Could not save link" });
-    }
-  }
+    },
+    validation: {
+      title: FormValidation.Required,
+      url: (value) => {
+        if (!value) {
+          return "URL is required";
+        }
+        try {
+          new URL(value.trim());
+        } catch {
+          return "Please enter a valid URL";
+        }
+      },
+    },
+    initialValues: {
+      title: link?.title ?? "",
+      url: link?.url ?? "",
+    },
+  });
 
   return (
     <Form
@@ -54,8 +73,8 @@ export function LinkForm({ projectId, link, onSave }: LinkFormProps) {
         </ActionPanel>
       }
     >
-      <Form.TextField id="title" title="Title" placeholder="Enter link title" defaultValue={link?.title} autoFocus />
-      <Form.TextField id="url" title="URL" placeholder="Enter link URL" defaultValue={link?.url} />
+      <Form.TextField {...itemProps.title} title="Title" placeholder="Enter link title" autoFocus />
+      <Form.TextField {...itemProps.url} title="URL" placeholder="Enter link URL" />
     </Form>
   );
 }
